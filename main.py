@@ -2,8 +2,8 @@ import bz2
 import pandas as pd
 import matplotlib.pyplot as plt
 from jinja2 import Template
-
 import pandas as pd
+import os
 
 def process_txt_file(file_content):
     lines = file_content.split('\n')
@@ -48,29 +48,28 @@ def process_txt_file(file_content):
 
     return df
 
-def decompress_bz2_file(file_path):
-    try:
-        with bz2.open(file_path, 'rb') as f:
-            decompressed_content = f.read()
-        return decompressed_content.decode('utf-8', errors='replace')
-    except Exception as e:
-        print(f"Error decompressing file: {e}")
-        return ""
-
 def main(file_path):
-    decompressed_content = decompress_bz2_file(file_path)
-    if decompressed_content:
-        df = process_txt_file(decompressed_content)
-        return df
-    else:
-        return "Failed to decompress and process the file."
+    try:
+        # Open the file with a more forgiving encoding setting
+        with open(file_path, 'r', encoding='latin1', errors='replace') as file:
+            file_content = file.read()
+        df = process_txt_file(file_content)
+        if isinstance(df, pd.DataFrame):
+            return df
+        else:
+            return "Failed to process data into DataFrame."
+    except Exception as e:
+        print(f"Error reading file: {e}")
+        return "Failed to read and process the file."
 
 # Load the data
-data = main('/Users/ashutoshjoshi/Desktop/Github/Auto-Report/Pandora211s1_Agam_20220913_L0 (1).txt.bz2')
-
+file_path = '/Users/ashutoshjoshi/Desktop/Github/Auto-Report/Pandora211s1_Agam_20220913_L0.txt'  # Assuming the file is now a regular text file
+data = main(file_path)
 
 
 def plot_chart(df, title, filename):
+    if not os.path.exists(os.path.dirname(filename)):
+        os.makedirs(os.path.dirname(filename))
     average_values = df.iloc[:, 25:2047].mean()
     x_values = range(len(average_values))
     
@@ -93,7 +92,7 @@ def moon_open(df):
     plt.title('Pixel Values for Moon Open')
     plt.xlabel('Pixel Number')
     plt.ylabel('Pixel Value')
-    plt.savefig('moon_open.png')
+    plt.savefig('charts/moon_open.png')
     plt.close()
 
 def sun_open(df):
@@ -108,7 +107,7 @@ def sun_open(df):
     plt.title('Pixel Values for Sun Open')
     plt.xlabel('Pixel Number')
     plt.ylabel('Pixel Value')
-    plt.savefig('sun_open.png')
+    plt.savefig('charts/sun_open.png')
     plt.close()
 
 def all_sensors(df):
@@ -132,7 +131,7 @@ def all_sensors(df):
     plt.title('Sensor Readings Over Time')
     plt.xticks(rotation=45)
     plt.legend()
-    plt.savefig('all_sensor_readings.png')
+    plt.savefig('charts/all_sensor_readings.png')
     plt.close()
 
 df_opaque = data[data['Filterwheel 2'].isin([3, 6])]
@@ -141,9 +140,9 @@ df_open = data[(data['Filterwheel 2'].isin([1, 4])) & (data['Filterwheel 1'].isi
 # df_sun_open = data[(data['Filterwheel 2'].isin([1, 2])) & (data['Routine Code'] == 'SO')]
 
 
-plot_chart(df_opaque, 'Pixel Values for Opaque', 'opaque.png')
+plot_chart(df_opaque, 'Pixel Values for Opaque', 'charts/opaque.png')
 # opaque(data)
-plot_chart(df_open, 'Pixel Values for Open', 'open.png')
+plot_chart(df_open, 'Pixel Values for Open', 'charts/open.png')
 moon_open(data)
 # plot_chart(df_moon_open, 'Pixel Values for Moon Open', 'moon_open.png')
 # plot_chart(df_sun_open, 'Pixel Values for Sun Open', 'sun_open.png')
@@ -221,19 +220,19 @@ html_template = """
 
     <section class="gradient-bg">
         <h2>Opaque</h2>
-        <img src="opaque.png" alt="Opaque">
+        <img src="charts/opaque.png" alt="Opaque">
         
         <h2>Open</h2>
-        <img src="open.png" alt="Open">
+        <img src="charts/open.png" alt="Open">
         
         <h2>Moon Open</h2>
-        <img src="moon_open.png" alt="Moon Open">
+        <img src="charts/moon_open.png" alt="Moon Open">
         
         <h2>Sun Open</h2>
-        <img src="sun_open.png" alt="Sun Open">
+        <img src="charts/sun_open.png" alt="Sun Open">
         
         <h2>All Sensor Readings</h2>
-        <img src="all_sensor_readings.png" alt="All Sensor Readings">
+        <img src="charts/all_sensor_readings.png" alt="All Sensor Readings">
     </section>
 </body>
 </html>
@@ -243,8 +242,15 @@ html_template = """
 template = Template(html_template)
 html_report = template.render()
 
-# Save HTML report
-with open('sensor_data_report.html', 'w') as f:
-    f.write(html_report)
 
+report_path = 'Daily_report.html' 
+
+
+# directory = os.path.dirname(report_path)
+# if not os.path.exists(directory):
+#     os.makedirs(directory)
+
+
+with open(report_path, 'w') as f:
+    f.write(html_report)
 print("HTML report generated successfully.")
