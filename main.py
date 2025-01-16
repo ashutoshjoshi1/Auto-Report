@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from jinja2 import Template
 import pandas as pd
 import os
+from datetime import datetime, timedelta
 
 def process_txt_file(file_content):
     lines = file_content.split('\n')
@@ -63,7 +64,11 @@ def main(file_path):
         return "Failed to read and process the file."
 
 # Load the data
-file_path = '/Users/ashutoshjoshi/Desktop/Github/Auto-Report/Pandora211s1_Agam_20220913_L0.txt'  # Assuming the file is now a regular text file
+base_path = '/Users/ashutoshjoshi/Desktop/Github/Auto-Report/Pandora211s1_Agam_'  #20220913_L0.txt'  # Assuming the file is now a regular text file
+today = datetime.now()
+yesterday = today - timedelta(days=1)
+yesterday_formatted = yesterday.strftime('%Y%m%d')
+file_path = base_path + yesterday_formatted +'_L0.txt'
 data = main(file_path)
 
 
