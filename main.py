@@ -89,9 +89,9 @@ def plot_chart(df, title, filename):
 def moon_open(df):
     df1 = df[df['Routine Code'] == 'MO']
     df1 = df1.fillna(0).astype(int)
+    x = df1.iloc[:,1]
     df1 = df1.iloc[:, 999:2030]
     y = df1.mean(axis=1).tolist()
-    x = range(len(y))
     plt.figure(figsize=(21, 9))
     plt.scatter(x, y)
     plt.title('Pixel Values for Moon Open')
@@ -102,11 +102,9 @@ def moon_open(df):
 
 def sun_open(df):
     df1 = df[df['Routine Code'].isin(['SQ','SS','SO'])]
-    # df1 = df1.fillna(0).astype(int)
     timest = df1.iloc[:,1]
     df1 = df1.iloc[:, 999:2030]
     y = df1.mean(axis=1).tolist()
-    # x = range(len(y))
     plt.figure(figsize=(21, 9))
     plt.scatter(timest, y)
     plt.title('Pixel Values for Sun Open')
@@ -119,8 +117,6 @@ def all_sensors(df):
     df1 = df.iloc[:, 1:2030]
     df1 = df1.fillna(0).astype(int)
     df1['Head Sensor Pressure [hPa]'] = df1['Head Sensor Pressure [hPa]'] * 0.01
-
-    # Plotting logic
     plt.figure(figsize=(21, 9))
     plt.plot(df1['Timestamp'], df1['Electronics Temp [°C]'], label='Electronics Temp [°C]')
     plt.plot(df1['Timestamp'], df1['Control Temp [°C]'], label='Control Temp [°C]')
@@ -141,18 +137,11 @@ def all_sensors(df):
 
 df_opaque = data[data['Filterwheel 2'].isin([3, 6])]
 df_open = data[(data['Filterwheel 2'].isin([1, 4])) & (data['Filterwheel 1'].isin([1, 2, 4]))]
-# df_moon_open = data[data['Routine Code'] == 'MO']
-# df_sun_open = data[(data['Filterwheel 2'].isin([1, 2])) & (data['Routine Code'] == 'SO')]
-
 
 plot_chart(df_opaque, 'Pixel Values for Opaque', 'charts/opaque.png')
-# opaque(data)
 plot_chart(df_open, 'Pixel Values for Open', 'charts/open.png')
 moon_open(data)
-# plot_chart(df_moon_open, 'Pixel Values for Moon Open', 'moon_open.png')
-# plot_chart(df_sun_open, 'Pixel Values for Sun Open', 'sun_open.png')
 sun_open(data)
-# plot_chart(data, 'Pixel Values for All Sensor Readings', 'all_sensor_readings.png')
 all_sensors(data)
 
 # HTML template
@@ -243,12 +232,11 @@ html_template = """
 </html>
 """
 
-# Render HTML report
 template = Template(html_template)
 html_report = template.render()
 
 
-report_path = 'Daily_report.html' 
+report_path = yesterday_formatted+'.html' 
 
 
 # directory = os.path.dirname(report_path)
